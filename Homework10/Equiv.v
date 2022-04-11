@@ -437,28 +437,18 @@ Proof.
     unfold aequiv in H1.
     rewrite <- H1 in H3.
     simpl in H3.
-    
-
-(*  intros x a H1.
-  unfold cequiv.
-  split.
-  - intros H2. inversion H2. rewrite <- H3.
+    rewrite -> t_update_same in H3.
+    assumption.
+  - intros H2.
+    inversion H2.
+    subst.
     unfold aequiv in H1.
-    clear H0.
-    assert (H4: st=[x := a]=> st -> st=[x := x]=> st).
-    { intros H5.
-      assert (H6 : st = (x !-> (aeval st a) ; st)).
-      { rewrite <- H1. simpl. rewrite t_update_same. reflexivity. }
-      rewrite <- H1 in H6. simpl in H6.
-      
-      }
-
-    assert (H4 : st = (x !-> (aeval st a) ; st)).
-    { rewrite <- H1. simpl. rewrite t_update_same. reflexivity. }
-    rewrite H4. 
-*)
-
-  (* FILL IN HERE *) Admitted.
+    rewrite <- H1 in H2.
+    rewrite t_update_same in H2.
+    rewrite <- H1.
+    rewrite t_update_same.
+    apply E_Skip.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (equiv_classes) *)
@@ -1287,11 +1277,16 @@ Proof.
 Theorem inequiv_exercise:
   ~ cequiv <{ while true do skip end }> <{ skip }>.
 Proof.
-  unfold cequiv.
   unfold not.
   intros H.
-  
-  (* FILL IN HERE *) Admitted.
+  unfold cequiv in H.
+  destruct (H empty_st empty_st).
+  assert (H2: (empty_st =[ while true do skip end ]=> empty_st) -> False).
+  { apply while_true_nonterm. unfold bequiv. reflexivity. }
+  apply H2.
+  apply H1.
+  apply E_Skip.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
