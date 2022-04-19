@@ -394,27 +394,27 @@ End ExPrettyAssertions.
     Which of the following Hoare triples are _valid_ -- i.e., the
     claimed relation between [P], [c], and [Q] is true?
 
-   1) {{True}} X := 5 {{X = 5}}
+    Valid   1) {{True}} X := 5 {{X = 5}} 
 
-   2) {{X = 2}} X := X + 1 {{X = 3}}
+    Valid   2) {{X = 2}} X := X + 1 {{X = 3}}
 
-   3) {{True}} X := 5; Y := 0 {{X = 5}}
+    Valid   3) {{True}} X := 5; Y := 0 {{X = 5}}
 
-   4) {{X = 2 /\ X = 3}} X := 5 {{X = 0}}
+    Valid   4) {{X = 2 /\ X = 3}} X := 5 {{X = 0}}
 
-   5) {{True}} skip {{False}}
+    Invalid 5) {{True}} skip {{False}}
 
-   6) {{False}} skip {{True}}
+    Valid   6) {{False}} skip {{True}}
 
-   7) {{True}} while true do skip end {{False}}
+    Valid   7) {{True}} while true do skip end {{False}}
 
-   8) {{X = 0}}
-        while X = 0 do X := X + 1 end
-      {{X = 1}}
+    Valid   8) {{X = 0}}
+               while X = 0 do X := X + 1 end
+               {{X = 1}}
 
-   9) {{X = 1}}
-        while ~(X = 0) do X := X + 1 end
-      {{X = 100}}
+    Valid   9) {{X = 1}}
+               while ~(X = 0) do X := X + 1 end
+               {{X = 100}}
 *)
 (* FILL IN HERE
 
@@ -446,7 +446,12 @@ Theorem hoare_post_true : forall (P Q : Assertion) c,
   (forall st, Q st) ->
   {{P}} c {{Q}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P Q c H1.
+  unfold hoare_triple.
+  intros st1 st2 H2 H3.
+  apply H1.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 1 star, standard (hoare_pre_false) *)
@@ -458,7 +463,14 @@ Theorem hoare_pre_false : forall (P Q : Assertion) c,
   (forall st, ~ (P st)) ->
   {{P}} c {{Q}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P Q c H1.
+  unfold hoare_triple.
+  intros st1 st2 H2 H3.
+  unfold not in H1.
+  apply H1 in H3.
+  destruct H3.
+Qed.
+
 (** [] *)
 
 (* ################################################################# *)
@@ -683,7 +695,9 @@ Example hoare_asgn_examples1 :
       X := 2 * X
     {{ X <= 10 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  exists ((X <= 10) [X |-> 2 * X]).
+  apply hoare_asgn.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (hoare_asgn_examples2) *)
@@ -692,7 +706,10 @@ Example hoare_asgn_examples2 :
     {{ P }}
       X := 3
     {{ 0 <=  X /\ X <= 5 }}.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.
+  exists ((0 <= X /\ X <= 5) [X |-> 3]).
+  apply hoare_asgn.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (hoare_asgn_wrong)
@@ -712,6 +729,8 @@ Proof. (* FILL IN HERE *) Admitted.
     the rule doesn't work.) *)
 
 (* FILL IN HERE *)
+
+
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_hoare_asgn_wrong : option (nat*string) := None.
@@ -741,6 +760,15 @@ Theorem hoare_asgn_fwd :
   {{fun st => P (X !-> m ; st)
            /\ st X = aeval (X !-> m ; st) a }}.
 Proof.
+  intros m a P.
+  unfold hoare_triple.
+  intros st1 st2 H1 H2.
+  destruct H2 as [H2 H3].
+  split.
+  - subst. inversion H1. subst.
+    unfold assn_sub in H1.
+    
+    
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
@@ -1095,14 +1123,21 @@ Example assn_sub_ex1' :
   X := 2 * X
   {{ X <= 10 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_consequence_pre.
+  - apply hoare_asgn.
+  - assn_auto.
+Qed.
 
 Example assn_sub_ex2' :
   {{ 0 <= 3 /\ 3 <= 5 }}
   X := 3
   {{ 0 <= X /\ X <= 5 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_consequence_pre.
+  - apply hoare_asgn.
+  - assn_auto.
+Qed.
+
 
 (** [] *)
 
