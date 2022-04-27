@@ -318,13 +318,15 @@ End ExPrettyAssertions.
 
      2) forall m, {{X = m}} c {{X = m + 5)}}
 
+        The following Hoare triple is valid for any choice of [m]
+
         assumption 1 : the command [c] start executing in a state
-                       that satisfy X = m for every m inputed
+                       that satisfy X = m
 
         assumption 2 : the command [c] eventually terminates in a state
 
         conclusion : the state in which the command [c] terminates in
-                     satisfy the assertion X = m + 5 for every m inputed.
+                     satisfy the assertion X = m + 5.
 
      3) {{X <= Y}} c {{Y <= X}}
 
@@ -353,6 +355,8 @@ End ExPrettyAssertions.
           c
           {{Y = real_fact m}}
 
+        The following Hoare triple is valid for any choice of [m]
+
         assumption 1 : the command [c] start executing in a state that
                         satisfy the assertion X = m for all m inputed.
 
@@ -366,6 +370,8 @@ End ExPrettyAssertions.
           {{X = m}}
           c
           {{(Z * Z) <= m /\ ~ (((S Z) * (S Z)) <= m)}}
+
+        The following Hoare triple is valid for any choice of [m]
 
         assumption 1 : the command [c] start executing in a state that
                         satisfy the assertion X = m for all m inputed
@@ -730,7 +736,12 @@ Qed.
 
 (* FILL IN HERE *)
 
-
+(* One counter example that can be derived from the rule is
+    {{ True }} X := X - (X + 1) {{ X = X - (X + 1) }} since natural number
+     can only be either zero or a successor of another natural number
+      it can never be negative. However, for all natual number X, X - (X + 1)
+      must be negative. Therefore, we have {{ True }} [c] {{ False }} 
+    which is invalid *)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_hoare_asgn_wrong : option (nat*string) := None.
@@ -743,7 +754,7 @@ Definition manual_grade_for_hoare_asgn_wrong : option (nat*string) := None.
     that does, intuitively, "work forwards" rather than backwards.
 
        ------------------------------------------ (hoare_asgn_fwd)
-       {{fun st => P st /\ st X = m}}
+       {{fun st => P st /\ st X = m}} 
          X := a
        {{fun st => P st' /\ st X = aeval st' a }}
        (where st' = (X !-> m ; st))
@@ -763,13 +774,20 @@ Proof.
   intros m a P.
   unfold hoare_triple.
   intros st1 st2 H1 H2.
-  destruct H2 as [H2 H3].
+  inversion H1. subst.
   split.
-  - subst. inversion H1. subst.
-    unfold assn_sub in H1.
-    
-    
-  (* FILL IN HERE *) Admitted.
+  - rewrite t_update_shadow.
+    destruct H2 as [H2 H3].
+    rewrite <- H3.
+    rewrite t_update_same.
+    apply H2.
+  - rewrite t_update_shadow.
+    destruct H2 as [H2 H3].
+    rewrite <- H3.
+    rewrite t_update_same.
+    rewrite t_update_eq.
+    reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_asgn_fwd_exists)
