@@ -1340,6 +1340,19 @@ Qed.
     specialize H with (a := your_a) (n := your_n)
 
     the hypothesis will be instantiated on [your_a] and [your_n].
+
+
+Thoughts
+
+          {{ a := n, [X |-> 3] }}
+    {{ Y := n, [Y |-> a], [X |-> 3] }}
+                X := 3
+          {{ Y := n, [Y |-> a] }}
+                Y := a
+             {{ Y := n }}
+
+  Therefore, we need to find a case of contridiction between
+    {{ a := n, [X |-> 3] }} and {{ a := n }}
  *)
 
 Theorem invalid_triple : ~ forall (a : aexp) (n : nat),
@@ -1635,6 +1648,14 @@ Inductive ceval : com -> state -> state -> Prop :=
       st  =[ c ]=> st' ->
       st' =[ while b do c end ]=> st'' ->
       st  =[ while b do c end ]=> st''
+  | E_If1True : forall st st' b c, 
+      beval st b = true ->
+      st =[ c ]=> st' ->
+      st =[if1 b then c end ]=> st'
+  | E_If1False : forall st st' b c,
+      beval st b = false ->
+      st = st' ->
+      st =[ if1 b then c end ]=> st'
 (* FILL IN HERE *)
 
 where "st '=[' c ']=>' st'" := (ceval c st st').
@@ -1647,12 +1668,18 @@ Hint Constructors ceval : core.
 Example if1true_test :
   empty_st =[ if1 X = 0 then X := 1 end ]=> (X !-> 1).
 Proof. 
-     rewrite E_IfTrue.
-(* FILL IN HERE *) Admitted.
+   apply E_If1True.
+   - eauto.
+   - eauto.
+Qed.
 
 Example if1false_test :
   (X !-> 2) =[ if1 X = 0 then X := 1 end ]=> (X !-> 2).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. 
+  apply E_If1False.
+  - eauto.
+  - eauto.
+Qed.
 
 (** [] *)
 
@@ -1689,6 +1716,12 @@ Notation "{{ P }}  c  {{ Q }}" := (hoare_triple P c Q)
     parsed as an assertion, write it as [(e)%assertion]. *)
 
 (* FILL IN HERE *)
+
+Theorem hoare_if1 : forall P Q (b:bexp) c,
+  {{ P }}
+  if1 ((beval st b) \/ (not (beval st b))) then c end
+  {{ Q }} ->
+  {{ P }} c {{ Q }}.
 
 (** For full credit, prove formally [hoare_if1_good] that your rule is
     precise enough to show the following valid Hoare triple:
